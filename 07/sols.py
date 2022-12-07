@@ -7,6 +7,7 @@ class FileTree:
 
     def addNode(self, nodeName, parentName):
         self.nodes.append(Node(self.levelNum, nodeName, parentName))
+        self.getNode(parentName).addChildDir(nodeName)
 
     def listAllNodes(self):
         return self.nodes
@@ -50,6 +51,8 @@ class Node:
     def getNodeLevel(self):
         return self.level
 
+
+
 class Cursor:
     def __init__(self, tree) -> None:
         self.parentDir = '/'
@@ -65,7 +68,6 @@ class Cursor:
         parent = self.tree.getNode(self.currentDir).getNodeParent()
         self.tree.levelNum -=1 if self.tree.levelNum > 1 else 1
         self.currentDir = parent
-        print(self.tree.levelNum)
         if self.tree.levelNum > 1:
             self.parentDir = self.tree.getNode(self.currentDir).getNodeParent()  
         else: 
@@ -81,13 +83,13 @@ class Cursor:
         self.tree.addNode(dirName, self.currentDir)
 
     def createFile(self, fileName, fileSize):
-        self.tree.getNode(self.currentDir).addFile(fileName, fileSize)
+        self.tree.getNode(self.currentDir).addFile(fileName, int(fileSize))
 
     def getCurrentLevel(self):
         return self.tree.levelNum
 
-    def getLevelDirs(self):
-        dirs = [d for d in self.tree.nodes if  d.getNodeLevel == self.tree.levelNum]
+    def getLevelDirs(self, level):
+        dirs = [d for d in self.tree.nodes if  d.getNodeLevel() == level]
         return dirs
 
     def getAllNodes(self):
@@ -95,6 +97,18 @@ class Cursor:
 
     def getAllFilesInCurrentDir(self):
         return self.tree.getNode(self.currentDir).getNodeFiles()
+    
+    def calculateDirSize(self):
+        return sum(self.tree.getNode(self.currentDir).getNodeFiles().values())
+
+    def traverseNode(self, size, level):
+        nodeList = self.getLevelDirs(level)
+        for n in nodeList:
+            if n.getNodeChildDir() == {}:
+                size += sum(n.getNodeFiles().values())
+            else:
+                return  self.traverseNode(size, level+1)
+        return size
 
 
 f1 = FileTree()
@@ -102,11 +116,9 @@ c = Cursor(f1)
 
 with open("input.txt") as f:
     for line in f:
-        print(line)
+        # print(line)
         if(line[0] == '$'):
-            print(line[0])
             cmdLst = line.strip('\n').split(' ')
-            print(cmdLst)
             if(cmdLst[1]=='cd'):
                 if(cmdLst[2]=='/'):
                     c.returnToRoot()
@@ -122,4 +134,14 @@ with open("input.txt") as f:
                 c.createDir(createLst[1])
             else:
                 c.createFile(createLst[1], createLst[0])
-            
+
+c.returnToRoot()
+
+
+print(c.tree.levelNum)
+print(c.traverseNode(0, c.tree.levelNum))
+for d in c.getLevelDirs(c.tree.levelNum):
+    print(d.getNodeName())
+c.descentTree('jpfrhmw')
+print(c.tree.levelNum)
+print(c.traverseNode(0, c.tree.levelNum))
