@@ -21,7 +21,7 @@ class SierpinskiTriangle:
         S = self.point_dict[random.randint(1,3)]
         self.x = 0.5*(self.x +S[0])
         self.y = 0.5*(self.y +S[1])
-        colour = self.colours[random.randint(1,4)] if self.pointNum < 2000 else 'black'
+        colour = self.colours[random.randint(1,4)]
         self.canvas.create_line(self.x, self.y, self.x+1, self.y, fill=colour)
         
         self.pointNum+=1

@@ -88,8 +88,8 @@ class Cursor:
     def getCurrentLevel(self):
         return self.tree.levelNum
 
-    def getLevelDirs(self, level):
-        dirs = [d for d in self.tree.nodes if  d.getNodeLevel() == level]
+    def getLevelDirs(self, level, parent):
+        dirs = [d for d in self.tree.nodes if  d.getNodeLevel() == level and d.getNodeParent()==parent]
         return dirs
 
     def getAllNodes(self):
@@ -101,14 +101,23 @@ class Cursor:
     def calculateDirSize(self):
         return sum(self.tree.getNode(self.currentDir).getNodeFiles().values())
 
-    def traverseNode(self, size, level):
-        nodeList = self.getLevelDirs(level)
-        for n in nodeList:
-            if n.getNodeChildDir() == {}:
-                size += sum(n.getNodeFiles().values())
-            else:
-                return  self.traverseNode(size, level+1)
-        return size
+    def traverseNode(self, size, level, parent):
+        nodeList = self.getLevelDirs(level, parent)
+        if(len(nodeList)==0):
+            size += sum(self.tree.getNode(parent).getNodeFiles().values())
+            print('fffffffffff')
+            print(size)
+            print(parent)
+            return size
+        else:
+            for n in nodeList:
+                if n.getNodeChildDir() == {}:
+                    size += sum(n.getNodeFiles().values())
+                    return size
+                else:
+                    size += sum(n.getNodeFiles().values())
+                    return self.traverseNode(size, level+1, n.getNodeName())
+            return size
 
 
 f1 = FileTree()
@@ -116,7 +125,6 @@ c = Cursor(f1)
 
 with open("input.txt") as f:
     for line in f:
-        # print(line)
         if(line[0] == '$'):
             cmdLst = line.strip('\n').split(' ')
             if(cmdLst[1]=='cd'):
@@ -136,12 +144,33 @@ with open("input.txt") as f:
                 c.createFile(createLst[1], createLst[0])
 
 c.returnToRoot()
+# print(c.currentDir)
+# print(c.traverseNode(0, c.tree.getNode(c.currentDir).getNodeLevel(), c.currentDir))
 
-
-print(c.tree.levelNum)
-print(c.traverseNode(0, c.tree.levelNum))
-for d in c.getLevelDirs(c.tree.levelNum):
-    print(d.getNodeName())
-c.descentTree('jpfrhmw')
-print(c.tree.levelNum)
-print(c.traverseNode(0, c.tree.levelNum))
+# # print(c.tree.levelNum)
+# # print(c.traverseNode(0, c.tree.levelNum))
+# # for d in c.getLevelDirs(c.tree.levelNum, c.currentDir):
+# #     print(d.getNodeName())
+# #     print(d.getNodeParent())
+# print('*****************************')
+# c.descentTree('drblq')
+# # print(c.tree.levelNum)
+# # print(c.currentDir)
+# print(c.traverseNode(0, c.tree.getNode(c.currentDir).getNodeLevel(), c.currentDir))
+# print('*****************************')
+# # for d in c.getLevelDirs(c.tree.levelNum, c.currentDir):
+# #     print(d.getNodeName())
+# #     print(d.getNodeParent())
+# c.descentTree('brfnfhj')
+# # print(c.tree.levelNum)
+# print(c.currentDir)
+# print(c.tree.getNode(c.currentDir).getNodeLevel())
+# print(c.traverseNode(0, c.tree.getNode(c.currentDir).getNodeLevel(), c.currentDir))
+dicList = {}
+for n in c.tree.listAllNodes():
+    name = n.getNodeName()
+    level = n.getNodeLevel()
+    dicList[n.getNodeName()] = c.traverseNode(0, level, name)
+vals = dict((k, v) for k, v in dicList.items() if v <= 100000)
+print(vals)
+print(sum(vals.values()))
